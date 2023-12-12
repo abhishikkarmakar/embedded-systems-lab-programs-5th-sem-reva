@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <pthread.h>
 
-void *print_message_function(void *ptr);
+void *print_message_function(void *ptr) {
+    char *message = (char *)ptr;
+    printf("%s \n", message);
+}
 
 int main() {
     pthread_t thread1, thread2;
@@ -20,9 +23,5 @@ int main() {
 
     return 0;
 }
-void *print_message_function(void *ptr) {
-    char *message = (char *)ptr;
-    printf("%s \n", message);
 
-}
 
