@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <pthread.h>
-
+#include <stdlib.h>
 #define Buffer_Limit 10
 
 int Index_Value = 0, i, j;
@@ -35,7 +35,9 @@ void *Producer() {
 }
 
 int main() {
+    
     pthread_t producer_thread_id, consumer_thread_id;
+    srand(time(NULL));
     pthread_create(&producer_thread_id, NULL, &Producer, NULL);
     pthread_create(&consumer_thread_id, NULL, &Consumer, NULL);
     pthread_join(producer_thread_id, NULL);
