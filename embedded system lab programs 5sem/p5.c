@@ -1,55 +1,53 @@
-#include <stdio.h>
-#include <pthread.h>
+#include<pthread.h>
+#include<stdio.h>
+#include<stdlib.h>
+#include<unistd.h>
 
-pthread_mutex_t count_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t condition_var = PTHREAD_COND_INITIALIZER;
+#define count_done 10
+#define halt1 3
+#define halt2 6
 
-void *functionCount1();
-void *functionCount2();
-int count = 0;
+int count=0;
 
-#define COUNT_DONE 10
-#define COUNT_HALT1 3
-#define COUNT_HALT2 6
-
-int main() {
-    pthread_t thread1, thread2;
-    pthread_create(&thread1, NULL, &functionCount1, NULL);
-    pthread_create(&thread2, NULL, &functionCount2, NULL);
-    pthread_join(thread1, NULL);
-    pthread_join(thread2, NULL);
-    printf("Final count: %d\n", count);
-    return 0;
-}
-
-// Write numbers 1-3 and 8-10 as permitted by functionCount2()
-void *functionCount1() {
-    while (1) {
-        pthread_mutex_lock(&count_mutex);
-        pthread_cond_wait(&condition_var, &count_mutex);
+pthread_mutex_t m1 = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t c1 = PTHREAD_COND_INITIALIZER;
+void *functioncount1(){
+    while(1){
+        pthread_mutex_lock(&m1);
+        pthread_cond_wait(&c1,&m1);
         count++;
-        printf("Counter value functionCount1: %d\n", count);
-        pthread_mutex_unlock(&count_mutex);
-        if (count >= COUNT_DONE)
-            return NULL;
-    }
-    return NULL;
-}
-
-// Write numbers 4-7
-void *functionCount2() {
-    while (1) {
-        pthread_mutex_lock(&count_mutex);
-        if (count < COUNT_HALT1 || count > COUNT_HALT2) {
-            pthread_cond_signal(&condition_var);
-        } else {
-            count++;
-            printf("Counter value functionCount2: %d\n", count);
+        printf("Thread 1 count : %d \n",count);
+        pthread_mutex_unlock(&m1);
+        
+    
+        if(count>count_done){
+            break;
         }
-        pthread_mutex_unlock(&count_mutex);
-        if (count >= COUNT_DONE)
-            return NULL;
     }
-    return NULL;
+}
+void *functioncount2(){
+    while(1){
+        pthread_mutex_lock(&m1);
+        if(count<halt1 || count>=halt2){
+            pthread_cond_signal(&c1);
+        }
+        else{
+        count++;
+        printf("Thread 2 count : %d \n",count);
+       
+        }
+        pthread_mutex_unlock(&m1);
+        if(count>count_done){
+            break;
+        }
+    }
 }
 
+int main(){
+    pthread_t th1,th2;
+    pthread_create(&th1,NULL,&functioncount1,NULL);
+    pthread_create(&th2,NULL,&functioncount2,NULL);
+    pthread_join(th1,NULL);
+    pthread_join(th2,NULL);
+  
+}
