@@ -1,46 +1,46 @@
-#include <stdio.h>
-#include <pthread.h>
-#include <stdlib.h>
-#define Buffer_Limit 10
+#include<pthread.h>
+#include<stdio.h>
+#include<stdlib.h>
+#include<unistd.h>
 
-int Index_Value = 0, i, j;
-int Buffer[Buffer_Limit];
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t Buffer_Full = PTHREAD_COND_INITIALIZER;
-pthread_cond_t Buffer_Empty = PTHREAD_COND_INITIALIZER;
+#define N 10
+int Buffer[N];
+int index1=0,i,j;
 
-void *Consumer() {
-    for (j = 0; j < Buffer_Limit; j++) {
-        pthread_mutex_lock(&mutex);
-        if (Index_Value == -1) {
-            pthread_cond_wait(&Buffer_Empty, &mutex);
+pthread_mutex_t m1 = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t full = PTHREAD_COND_INITIALIZER;
+pthread_cond_t empty = PTHREAD_COND_INITIALIZER;
+
+void *consumer(){
+    for(i=0;i<N;i++){
+        
+        pthread_mutex_lock(&m1);
+        if(index1==-1){
+            pthread_cond_wait(&empty,&m1);
         }
-        printf("\nConsumer:%d\t", Index_Value--);
-        pthread_mutex_unlock(&mutex);
-        pthread_cond_signal(&Buffer_Full);
+        printf("Consumer : %d\n",index1--);
+        pthread_mutex_unlock(&m1);
+        pthread_cond_signal(&full);
+    }
+}
+void *producer(){
+    for(j=0;j<N;j++){
+        pthread_mutex_lock(&m1);
+        if(index1==N){
+            pthread_cond_wait(&full,&m1);
+        }
+        Buffer[index1++]=rand()%50;
+        printf("producer : %d\n",index1);
+        pthread_mutex_unlock(&m1);
+        pthread_cond_signal(&empty);
     }
 }
 
-void *Producer() {
-    for (i = 0; i < Buffer_Limit; i++) {
-        pthread_mutex_lock(&mutex);
-        if (Index_Value == Buffer_Limit) {
-            pthread_cond_wait(&Buffer_Full, &mutex);
-        }
-        Buffer[Index_Value++] = rand() % 50;
-        printf("\nProducer:%d\t", Index_Value);
-        pthread_mutex_unlock(&mutex);
-        pthread_cond_signal(&Buffer_Empty);
-    }
-}
-
-int main() {
-    
-    pthread_t producer_thread_id, consumer_thread_id;
-    srand(time(NULL));
-    pthread_create(&producer_thread_id, NULL, &Producer, NULL);
-    pthread_create(&consumer_thread_id, NULL, &Consumer, NULL);
-    pthread_join(producer_thread_id, NULL);
-    pthread_join(consumer_thread_id, NULL);
-    return 0;
+int main(){
+    pthread_t th1,th2;
+    pthread_create(&th1,NULL,&producer,NULL);
+    pthread_create(&th2,NULL,&consumer,NULL);
+    pthread_join(th1,NULL);
+    pthread_join(th2,NULL);
+  
 }
